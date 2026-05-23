@@ -1,29 +1,42 @@
 import type { ContactPayload, ContactResponse } from '../types/contact';
 
-export const sendContact = async (
-    data: ContactPayload,
-): Promise<ContactResponse> => {
-    try {
-        const res = await fetch('/api/contact', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
+export class ContactApiError extends Error {
+  constructor(
+    message: string,
+    public fieldErrors?: Partial<Record<keyof ContactPayload, string>>,
+  ) {
+    super(message);
+    this.name = 'ContactApiError';
+  }
+}
 
-        const json = (await res.json()) as ContactResponse;
+export const sendContact = async (data: ContactPayload): Promise<ContactResponse> => {
+  let res: Response;
 
-        if (!res.ok || !json.ok) {
-            throw new Error(json.message || 'Ошибка отправки');
-        }
+  try {
+    res = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  } catch {
+    throw new ContactApiError('Нет связи с сервером. Запустите backend: npm run dev:backend');
+  }
 
-        return json;
-    } catch (error) {
-        if (error instanceof Error) {
-            throw error;
-        }
+  let json: ContactResponse;
 
-        throw new Error('Нет связи с сервером');
-    }
+  try {
+    json = (await res.json()) as ContactResponse;
+  } catch {
+    throw new ContactApiError('Сервер вернул некорректный ответ.');
+  }
+
+  if (!res.ok || !json.ok) {
+    throw new ContactApiError(
+      json.ok ? 'Ошибка отправки.' : json.message,
+      json.ok ? undefined : json.errors,
+    );
+  }
+
+  return json;
 };

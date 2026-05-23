@@ -63,15 +63,11 @@ export const ContactForm = () => {
                 message: res.message,
             });
         } catch (error) {
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : 'Неизвестная ошибка.';
 
-            setStatus({
-                type: 'error',
-                message,
-            });
+            const message =
+                error instanceof Error ? error.message : 'Неизвестная ошибка.';
+
+            setStatus({ type: 'error', message });
         } finally {
             setLoading(false);
         }

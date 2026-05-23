@@ -15,17 +15,24 @@ const handleContactPost = async (req: Request, res: Response): Promise<void> => 
   if (!isMailConfigured()) {
     res.status(503).json({
       ok: false,
-      message: 'Отправка писем не настроена.',
+      message:
+        'Отправка писем не настроена. Создайте backend/.env (см. .env.example) или включите USE_ETHEREAL=true для теста.',
     });
     return;
   }
 
   try {
     await sendContactEmails(data);
-    res.json({ ok: true, message: 'Сообщение отправлено. Копия придёт на ваш email.' });
+    res.json({
+      ok: true,
+      message: 'Сообщение отправлено. Копия придёт на ваш email.',
+    });
   } catch (error) {
     console.error('Mail error:', error);
-    res.status(500).json({ ok: false, message: 'Не удалось отправить письмо.' });
+    res.status(500).json({
+      ok: false,
+      message: (error),
+    });
   }
 };
 
